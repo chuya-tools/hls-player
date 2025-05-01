@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello</title>
+    <script src="https://app-folder/Plugins/hls.js/dist/hls.min.js"></script>
+
+    <script type="text/javascript">
+        const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time * 1000));//timeはミリ秒
+
+        function OnPlayClick() {
+            const video = document.querySelector('#video');
+            if (video.paused)
+                video.play();
+            else
+                video.pause();
+        }
+
+        function OnFastClick() {
+            const video = document.querySelector('#video');
+            const label = document.querySelector('#speed-label');
+
+            switch (label.textContent) {
+                case "":
+                    label.textContent = "2x";
+                    break;
+                case "2x":
+                    label.textContent = "4x";
+                    break;
+                case "4x":
+                    label.textContent = "8x";
+                    break;
+                case "8x":
+                    label.textContent = "16x";
+                    break;
+                case "16x":
+                    label.textContent = "";
+                    break;
+            }
+
+            video.playbackRate *= 2;
+        }
+
+        async function OnRewindClick() {
+            const video = document.querySelector('#video');
+            video.pause();
+
+            const before = Date.now();
+            console.log(Date.now());
+
+            count = 0;
+            while (count < 120) {
+                count++;
+                await sleep(1 / 24);
+                video.currentTime += -(1 / 24);
+            }
+            const after = Date.now();
+
+            console.log(after - before);
+        }
+
+    </script>
+</head>
+<body>
+    <p>Hello!</p>
+    <video id="video" controls="controls"></video>
+    
+    <button onclick="OnPlayClick()">play - pause</button>
+    <button onclick="OnFastClick()">fast</button>
+    <p>
+        speed
+        <span id="speed-label"></span>
+    </p>
+    <button onclick="OnRewindClick()">rewind</button>
+
+    <script type="module">
+        const video = document.querySelector('#video');
+        const videoSrc = chrome.webview.hostObjects.sync.class.VideoSourcePath;
+        console.log(videoSrc);
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {  // ネイティブサポートブラウザ用
+            video.src = videoSrc;
+        }
+    </script>
+</body>
+</html>
